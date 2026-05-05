@@ -102,6 +102,31 @@
   .msg { padding: 12px 16px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; margin-top: 12px; display: none; }
   .msg-success { background: rgba(0,255,135,0.1); color: var(--success); border: 1px solid rgba(0,255,135,0.2); }
   .msg-error { background: rgba(255,60,0,0.1); color: var(--danger); border: 1px solid rgba(255,60,0,0.2); }
+
+  /* NOTIFICATIONS */
+  .notif-bell { position: fixed; top: 20px; right: 20px; z-index: 999; }
+  .bell-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; position: relative; transition: border-color 0.2s; }
+  .bell-btn:hover { border-color: var(--accent); }
+  .bell-badge { position: absolute; top: -4px; right: -4px; background: var(--danger); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: none; align-items: center; justify-content: center; font-family: IBM Plex Mono; }
+  .bell-badge.show { display: flex; }
+  .notif-panel { position: absolute; top: 52px; right: 0; width: 320px; background: var(--surface); border: 1px solid var(--border); display: none; max-height: 400px; overflow-y: auto; }
+  .notif-panel.open { display: block; }
+  .notif-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-family: Bebas Neue; font-size: 16px; letter-spacing: 2px; display: flex; justify-content: space-between; align-items: center; }
+  .notif-clear { font-size: 10px; color: var(--muted); cursor: pointer; font-family: IBM Plex Mono; background: none; border: none; }
+  .notif-clear:hover { color: var(--danger); }
+  .notif-item { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 12px; }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-item.new { border-left: 3px solid var(--accent); }
+  .notif-title { font-weight: 500; margin-bottom: 4px; }
+  .notif-time { color: var(--muted); font-family: IBM Plex Mono; font-size: 10px; }
+  .notif-empty { padding: 24px; text-align: center; color: var(--muted); font-family: IBM Plex Mono; font-size: 11px; }
+
+  /* TOAST */
+  .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast { background: var(--surface); border: 1px solid var(--accent); padding: 14px 18px; font-size: 13px; min-width: 260px; animation: slideIn 0.3s ease; border-left: 4px solid var(--accent); }
+  .toast-title { font-family: Bebas Neue; font-size: 16px; letter-spacing: 2px; color: var(--accent); }
+  .toast-body { color: var(--muted); font-size: 12px; font-family: IBM Plex Mono; margin-top: 4px; }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
 </style>
 </head>
 <body>
@@ -118,6 +143,22 @@
 </div>
 
 <div id="app">
+<!-- NOTIFICATION BELL -->
+<div class="notif-bell" id="notif-bell">
+  <button class="bell-btn" onclick="toggleNotifPanel()">
+    🔔
+    <span class="bell-badge" id="bell-badge">0</span>
+  </button>
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-header">แจ้งเตือน <button class="notif-clear" onclick="clearNotifs()">ล้างทั้งหมด</button></div>
+    <div id="notif-list"><div class="notif-empty">ไม่มีการแจ้งเตือน</div></div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+
   <div class="layout">
     <div class="sidebar">
       <div class="sidebar-logo">STÜSSY<span>Admin Panel</span></div>
@@ -254,6 +295,8 @@ function initApp() {
   document.getElementById('app').style.display = 'block';
   if (adminUser) document.getElementById('admin-name').textContent = adminUser.name;
   loadDashboard();
+  updateBadge(); renderNotifs();
+  startNotifPolling();
 }
 function doLogout() { localStorage.removeItem('admin_token'); token = null; location.reload(); }
 
@@ -463,6 +506,88 @@ async function confirmReceipt(id) { await fetch(`${API}/receipts/${id}/confirm`,
 async function rejectReceipt(id) { if (!confirm('ปฏิเสธ?')) return; await fetch(`${API}/receipts/${id}/reject`, { method: 'PATCH', headers: headers() }); loadReceipts(); }
 function showMsg(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 3000); }
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin(); });
+
+
+// ── NOTIFICATIONS ──────────────────────────────────────────────
+let notifications = JSON.parse(localStorage.getItem('stussy_notifs') || '[]');
+let lastOrderCount = parseInt(localStorage.getItem('stussy_order_count') || '0');
+let notifPanelOpen = false;
+
+function saveNotifs() { localStorage.setItem('stussy_notifs', JSON.stringify(notifications)); }
+
+function updateBadge() {
+  const unread = notifications.filter(n => !n.read).length;
+  const badge = document.getElementById('bell-badge');
+  badge.textContent = unread;
+  badge.classList.toggle('show', unread > 0);
+}
+
+function renderNotifs() {
+  const list = document.getElementById('notif-list');
+  if (!notifications.length) { list.innerHTML = '<div class="notif-empty">ไม่มีการแจ้งเตือน</div>'; return; }
+  list.innerHTML = notifications.slice(0, 20).map(n => `
+    <div class="notif-item ${n.read ? '' : 'new'}">
+      <div class="notif-title">${n.title}</div>
+      <div class="notif-time">${n.body} · ${n.time}</div>
+    </div>`).join('');
+}
+
+function toggleNotifPanel() {
+  notifPanelOpen = !notifPanelOpen;
+  document.getElementById('notif-panel').classList.toggle('open', notifPanelOpen);
+  if (notifPanelOpen) {
+    notifications.forEach(n => n.read = true);
+    saveNotifs(); updateBadge(); renderNotifs();
+  }
+}
+
+function clearNotifs() {
+  notifications = []; saveNotifs(); renderNotifs(); updateBadge();
+}
+
+function addNotif(title, body) {
+  const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+  notifications.unshift({ title, body, time: now, read: false });
+  saveNotifs(); updateBadge(); renderNotifs();
+  showToast(title, body);
+}
+
+function showToast(title, body) {
+  const wrap = document.getElementById('toast-wrap');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<div class="toast-title">${title}</div><div class="toast-body">${body}</div>`;
+  wrap.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.5s'; setTimeout(() => toast.remove(), 500); }, 4000);
+}
+
+async function checkNewOrders() {
+  try {
+    const orders = await fetch(`${API}/orders`, { headers: headers() }).then(r => r.json());
+    if (!Array.isArray(orders)) return;
+    const count = orders.length;
+    if (lastOrderCount > 0 && count > lastOrderCount) {
+      const newCount = count - lastOrderCount;
+      addNotif('🛍️ ออเดอร์ใหม่!', `มีออเดอร์ใหม่ ${newCount} รายการ`);
+    }
+    lastOrderCount = count;
+    localStorage.setItem('stussy_order_count', count);
+  } catch {}
+}
+
+// เช็คทุก 30 วินาที
+function startNotifPolling() {
+  checkNewOrders();
+  setInterval(checkNewOrders, 30000);
+}
+
+// ปิด panel เมื่อคลิกข้างนอก
+document.addEventListener('click', e => {
+  if (notifPanelOpen && !document.getElementById('notif-bell').contains(e.target)) {
+    notifPanelOpen = false;
+    document.getElementById('notif-panel').classList.remove('open');
+  }
+});
 
 // ── EXPORT EXCEL ──────────────────────────────────────────────
 function exportToCSV(filename, rows, headers) {
