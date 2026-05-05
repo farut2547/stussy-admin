@@ -5,77 +5,37 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>STÜSSY — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root {
-    --bg: #0a0a0a;
-    --surface: #141414;
-    --surface2: #1e1e1e;
-    --border: #2a2a2a;
-    --accent: #e8ff00;
-    --accent2: #ff3c00;
-    --text: #f0f0f0;
-    --muted: #666;
-    --success: #00ff87;
-    --warning: #ffb800;
-    --danger: #ff3c00;
+    --bg: #0a0a0a; --surface: #141414; --surface2: #1e1e1e;
+    --border: #2a2a2a; --accent: #e8ff00; --accent2: #ff3c00;
+    --text: #f0f0f0; --muted: #666; --success: #00ff87;
+    --warning: #ffb800; --danger: #ff3c00;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans Thai', sans-serif; min-height: 100vh; }
 
-  /* LOGIN */
-  #login-screen {
-    display: flex; align-items: center; justify-content: center;
-    min-height: 100vh; background: var(--bg);
-  }
-  .login-box {
-    width: 380px; padding: 48px 40px;
-    border: 1px solid var(--border); background: var(--surface);
-  }
-  .login-logo {
-    font-family: 'Bebas Neue', sans-serif; font-size: 48px;
-    letter-spacing: 6px; color: var(--accent); margin-bottom: 8px;
-  }
+  #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .login-box { width: 380px; padding: 48px 40px; border: 1px solid var(--border); background: var(--surface); }
+  .login-logo { font-family: 'Bebas Neue', sans-serif; font-size: 48px; letter-spacing: 6px; color: var(--accent); margin-bottom: 8px; }
   .login-sub { color: var(--muted); font-size: 11px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 40px; font-family: 'IBM Plex Mono', monospace; }
   .field { margin-bottom: 16px; }
   .field label { display: block; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; font-family: 'IBM Plex Mono', monospace; }
-  .field input {
-    width: 100%; padding: 12px 16px; background: var(--bg);
-    border: 1px solid var(--border); color: var(--text);
-    font-family: 'IBM Plex Mono', monospace; font-size: 14px;
-    outline: none; transition: border-color 0.2s;
-  }
+  .field input { width: 100%; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 14px; outline: none; transition: border-color 0.2s; }
   .field input:focus { border-color: var(--accent); }
-  .btn-login {
-    width: 100%; padding: 14px; background: var(--accent); color: #000;
-    border: none; font-family: 'Bebas Neue', sans-serif; font-size: 18px;
-    letter-spacing: 3px; cursor: pointer; margin-top: 8px; transition: opacity 0.2s;
-  }
+  .btn-login { width: 100%; padding: 14px; background: var(--accent); color: #000; border: none; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 3px; cursor: pointer; margin-top: 8px; transition: opacity 0.2s; }
   .btn-login:hover { opacity: 0.85; }
   .login-error { color: var(--danger); font-size: 12px; margin-top: 12px; display: none; font-family: 'IBM Plex Mono', monospace; }
 
-  /* LAYOUT */
   #app { display: none; }
   .layout { display: flex; min-height: 100vh; }
 
-  /* SIDEBAR */
-  .sidebar {
-    width: 220px; background: var(--surface); border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 10;
-  }
-  .sidebar-logo {
-    padding: 24px 20px 20px;
-    font-family: 'Bebas Neue', sans-serif; font-size: 28px;
-    letter-spacing: 4px; color: var(--accent);
-    border-bottom: 1px solid var(--border);
-  }
+  .sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 10; }
+  .sidebar-logo { padding: 24px 20px 20px; font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 4px; color: var(--accent); border-bottom: 1px solid var(--border); }
   .sidebar-logo span { font-size: 10px; display: block; color: var(--muted); letter-spacing: 3px; font-family: 'IBM Plex Mono', monospace; margin-top: 2px; }
   .nav { flex: 1; padding: 16px 0; }
-  .nav-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 20px; cursor: pointer; transition: all 0.15s;
-    color: var(--muted); font-size: 13px; letter-spacing: 1px;
-    border-left: 3px solid transparent;
-  }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; cursor: pointer; transition: all 0.15s; color: var(--muted); font-size: 13px; letter-spacing: 1px; border-left: 3px solid transparent; }
   .nav-item:hover { color: var(--text); background: var(--surface2); }
   .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(232,255,0,0.05); }
   .nav-icon { font-size: 16px; width: 20px; text-align: center; }
@@ -85,31 +45,28 @@
   .btn-logout { margin-top: 12px; width: 100%; padding: 8px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 11px; cursor: pointer; letter-spacing: 2px; transition: all 0.2s; }
   .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
 
-  /* MAIN */
   .main { margin-left: 220px; flex: 1; padding: 32px; }
   .page { display: none; animation: fadeIn 0.3s ease; }
   .page.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-  .page-title {
-    font-family: 'Bebas Neue', sans-serif; font-size: 36px;
-    letter-spacing: 4px; margin-bottom: 8px;
-  }
+  .page-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 4px; margin-bottom: 8px; }
   .page-sub { color: var(--muted); font-size: 12px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 1px; margin-bottom: 32px; }
 
-  /* STATS */
-  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
-  .stat-card {
-    background: var(--surface); border: 1px solid var(--border);
-    padding: 20px 24px; position: relative; overflow: hidden;
-  }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 24px; position: relative; overflow: hidden; }
   .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); }
   .stat-label { font-size: 10px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; }
   .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 40px; letter-spacing: 2px; margin: 4px 0; }
   .stat-sub { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
 
-  /* TABLE */
-  .table-wrap { background: var(--surface); border: 1px solid var(--border); overflow: hidden; }
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .chart-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 24px; }
+  .chart-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; margin-bottom: 16px; }
+  .chart-wrap { position: relative; height: 200px; }
+  .chart-full { grid-column: span 2; }
+
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); overflow: hidden; margin-bottom: 24px; }
   .table-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
   .table-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; }
   .btn-refresh { padding: 8px 16px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 11px; cursor: pointer; letter-spacing: 1px; transition: all 0.2s; }
@@ -119,26 +76,18 @@
   td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: rgba(255,255,255,0.02); }
-  .badge {
-    display: inline-block; padding: 3px 10px; font-size: 10px;
-    letter-spacing: 1px; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace;
-  }
+  .badge { display: inline-block; padding: 3px 10px; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; }
   .badge-success { background: rgba(0,255,135,0.15); color: var(--success); }
   .badge-warning { background: rgba(255,184,0,0.15); color: var(--warning); }
   .badge-danger { background: rgba(255,60,0,0.15); color: var(--danger); }
   .badge-default { background: rgba(255,255,255,0.08); color: var(--muted); }
 
-  /* FORM */
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .form-card { background: var(--surface); border: 1px solid var(--border); padding: 28px; margin-bottom: 24px; }
   .form-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; margin-bottom: 20px; }
   .form-field { margin-bottom: 16px; }
   .form-field label { display: block; font-size: 10px; letter-spacing: 2px; color: var(--muted); margin-bottom: 8px; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; }
-  .form-field input, .form-field select, .form-field textarea {
-    width: 100%; padding: 10px 14px; background: var(--bg);
-    border: 1px solid var(--border); color: var(--text);
-    font-family: 'IBM Plex Mono', monospace; font-size: 13px; outline: none;
-  }
+  .form-field input, .form-field select, .form-field textarea { width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 13px; outline: none; }
   .form-field input:focus, .form-field select:focus { border-color: var(--accent); }
   .form-field textarea { resize: vertical; min-height: 80px; }
   .form-field select option { background: var(--bg); }
@@ -148,7 +97,6 @@
   .btn-danger-sm:hover { background: var(--danger); color: #fff; }
   .btn-sm { padding: 5px 12px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 10px; cursor: pointer; letter-spacing: 1px; transition: all 0.2s; }
   .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
-
   .loading { text-align: center; padding: 40px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 2px; }
   .empty { text-align: center; padding: 40px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
   .msg { padding: 12px 16px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; margin-top: 12px; display: none; }
@@ -158,35 +106,27 @@
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">STÜSSY</div>
     <div class="login-sub">Admin Dashboard</div>
-    <div class="field">
-      <label>Email</label>
-      <input type="email" id="login-email" placeholder="admin@email.com">
-    </div>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="login-password" placeholder="••••••••">
-    </div>
+    <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="admin@email.com"></div>
+    <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
     <button class="btn-login" onclick="doLogin()">LOGIN</button>
     <div class="login-error" id="login-error">❌ Email หรือ Password ไม่ถูกต้อง</div>
   </div>
 </div>
 
-<!-- APP -->
 <div id="app">
   <div class="layout">
     <div class="sidebar">
       <div class="sidebar-logo">STÜSSY<span>Admin Panel</span></div>
       <nav class="nav">
-        <div class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">📊</span> Dashboard</div>
-        <div class="nav-item" onclick="showPage('users')"><span class="nav-icon">👥</span> สมาชิก</div>
-        <div class="nav-item" onclick="showPage('products')"><span class="nav-icon">🧢</span> สินค้า</div>
-        <div class="nav-item" onclick="showPage('orders')"><span class="nav-icon">📦</span> ออเดอร์</div>
-        <div class="nav-item" onclick="showPage('receipts')"><span class="nav-icon">🧾</span> ใบเสร็จ</div>
+        <div class="nav-item active" onclick="showPage('dashboard', this)"><span class="nav-icon">📊</span> Dashboard</div>
+        <div class="nav-item" onclick="showPage('users', this)"><span class="nav-icon">👥</span> สมาชิก</div>
+        <div class="nav-item" onclick="showPage('products', this)"><span class="nav-icon">🧢</span> สินค้า</div>
+        <div class="nav-item" onclick="showPage('orders', this)"><span class="nav-icon">📦</span> ออเดอร์</div>
+        <div class="nav-item" onclick="showPage('receipts', this)"><span class="nav-icon">🧾</span> ใบเสร็จ</div>
       </nav>
       <div class="sidebar-footer">
         <div class="admin-badge"><strong id="admin-name">Admin</strong>Administrator</div>
@@ -195,8 +135,6 @@
     </div>
 
     <main class="main">
-
-      <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
         <div class="page-title">Dashboard</div>
         <div class="page-sub">ภาพรวมระบบทั้งหมด</div>
@@ -204,7 +142,21 @@
           <div class="stat-card"><div class="stat-label">สมาชิกทั้งหมด</div><div class="stat-value" id="stat-users">—</div><div class="stat-sub">registered users</div></div>
           <div class="stat-card"><div class="stat-label">สินค้า</div><div class="stat-value" id="stat-products">—</div><div class="stat-sub">active products</div></div>
           <div class="stat-card"><div class="stat-label">ออเดอร์</div><div class="stat-value" id="stat-orders">—</div><div class="stat-sub">total orders</div></div>
-          <div class="stat-card"><div class="stat-label">รอยืนยัน</div><div class="stat-value" id="stat-pending">—</div><div class="stat-sub">pending payments</div></div>
+          <div class="stat-card"><div class="stat-label">ยอดขายรวม</div><div class="stat-value" id="stat-revenue">—</div><div class="stat-sub">total revenue (฿)</div></div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card chart-full">
+            <div class="chart-title">ยอดขายรายวัน (7 วันล่าสุด)</div>
+            <div class="chart-wrap"><canvas id="chart-daily"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">สถานะออเดอร์</div>
+            <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">วิธีชำระเงิน</div>
+            <div class="chart-wrap"><canvas id="chart-payment"></canvas></div>
+          </div>
         </div>
         <div class="table-wrap">
           <div class="table-header"><div class="table-title">ออเดอร์ล่าสุด</div></div>
@@ -213,7 +165,6 @@
         </div>
       </div>
 
-      <!-- USERS -->
       <div class="page" id="page-users">
         <div class="page-title">สมาชิก</div>
         <div class="page-sub">จัดการผู้ใช้งานทั้งหมด</div>
@@ -224,7 +175,6 @@
         </div>
       </div>
 
-      <!-- PRODUCTS -->
       <div class="page" id="page-products">
         <div class="page-title">สินค้า</div>
         <div class="page-sub">เพิ่ม แก้ไข ลบสินค้า</div>
@@ -234,13 +184,7 @@
             <div class="form-field"><label>ชื่อสินค้า</label><input type="text" id="p-name" placeholder="Stussy Basic Tee"></div>
             <div class="form-field"><label>ราคา (บาท)</label><input type="number" id="p-price" placeholder="1290"></div>
             <div class="form-field"><label>หมวดหมู่</label>
-              <select id="p-category">
-                <option value="tshirt">T-Shirt</option>
-                <option value="hoodie">Hoodie</option>
-                <option value="pants">Pants</option>
-                <option value="accessories">Accessories</option>
-                <option value="cap">Cap</option>
-              </select>
+              <select id="p-category"><option value="tshirt">T-Shirt</option><option value="hoodie">Hoodie</option><option value="pants">Pants</option><option value="accessories">Accessories</option><option value="cap">Cap</option></select>
             </div>
             <div class="form-field"><label>URL รูปภาพ</label><input type="text" id="p-image" placeholder="https://..."></div>
             <div class="form-field" style="grid-column: span 2"><label>คำอธิบาย</label><textarea id="p-desc" placeholder="รายละเอียดสินค้า..."></textarea></div>
@@ -256,7 +200,6 @@
         </div>
       </div>
 
-      <!-- ORDERS -->
       <div class="page" id="page-orders">
         <div class="page-title">ออเดอร์</div>
         <div class="page-sub">จัดการคำสั่งซื้อทั้งหมด</div>
@@ -267,7 +210,6 @@
         </div>
       </div>
 
-      <!-- RECEIPTS -->
       <div class="page" id="page-receipts">
         <div class="page-title">ใบเสร็จ</div>
         <div class="page-sub">ยืนยันและจัดการการชำระเงิน</div>
@@ -277,7 +219,6 @@
           <tbody id="receipts-table"><tr><td colspan="6" class="loading">กำลังโหลด...</td></tr></tbody></table>
         </div>
       </div>
-
     </main>
   </div>
 </div>
@@ -286,58 +227,41 @@
 const API = 'https://stussy-backend.onrender.com/api';
 let token = localStorage.getItem('admin_token');
 let adminUser = null;
+let chartDaily, chartStatus, chartPayment;
 
 const headers = () => ({ 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' });
 
-// ถ้ามี token อยู่แล้ว
 if (token) initApp();
 
 async function doLogin() {
   const email = document.getElementById('login-email').value;
   const password = document.getElementById('login-password').value;
   try {
-    const res = await fetch(`${API}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
+    const res = await fetch(`${API}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
     const data = await res.json();
     if (data.token && data.user.role === 'admin') {
-      token = data.token;
-      adminUser = data.user;
-      localStorage.setItem('admin_token', token);
-      initApp();
+      token = data.token; adminUser = data.user;
+      localStorage.setItem('admin_token', token); initApp();
     } else if (data.user && data.user.role !== 'admin') {
       showLoginError('❌ บัญชีนี้ไม่มีสิทธิ์ Admin');
-    } else {
-      showLoginError('❌ Email หรือ Password ไม่ถูกต้อง');
-    }
+    } else { showLoginError('❌ Email หรือ Password ไม่ถูกต้อง'); }
   } catch { showLoginError('❌ ไม่สามารถเชื่อมต่อ Server'); }
 }
 
-function showLoginError(msg) {
-  const el = document.getElementById('login-error');
-  el.textContent = msg; el.style.display = 'block';
-}
-
+function showLoginError(msg) { const el = document.getElementById('login-error'); el.textContent = msg; el.style.display = 'block'; }
 function initApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   if (adminUser) document.getElementById('admin-name').textContent = adminUser.name;
   loadDashboard();
 }
+function doLogout() { localStorage.removeItem('admin_token'); token = null; location.reload(); }
 
-function doLogout() {
-  localStorage.removeItem('admin_token');
-  token = null;
-  location.reload();
-}
-
-function showPage(name) {
+function showPage(name, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
-  event.currentTarget.classList.add('active');
+  if (el) el.classList.add('active');
   if (name === 'dashboard') loadDashboard();
   if (name === 'users') loadUsers();
   if (name === 'products') loadProducts();
@@ -346,25 +270,60 @@ function showPage(name) {
 }
 
 function statusBadge(s) {
-  const map = {
-    pending: ['badge-warning', 'รอดำเนินการ'],
-    confirmed: ['badge-success', 'ยืนยันแล้ว'],
-    cancelled: ['badge-danger', 'ยกเลิก'],
-    awaiting_payment: ['badge-warning', 'รอชำระ'],
-    shipped: ['badge-success', 'จัดส่งแล้ว'],
-  };
+  const map = { pending: ['badge-warning','รอดำเนินการ'], confirmed: ['badge-success','ยืนยันแล้ว'], cancelled: ['badge-danger','ยกเลิก'], awaiting_payment: ['badge-warning','รอชำระ'], shipped: ['badge-success','จัดส่งแล้ว'], delivered: ['badge-success','ส่งแล้ว'] };
   const [cls, label] = map[s] || ['badge-default', s];
   return `<span class="badge ${cls}">${label}</span>`;
 }
-
 function paymentBadge(s) {
   const map = { pending: ['badge-warning','รอยืนยัน'], confirmed: ['badge-success','ยืนยันแล้ว'], rejected: ['badge-danger','ปฏิเสธ'] };
   const [cls, label] = map[s] || ['badge-default', s];
   return `<span class="badge ${cls}">${label}</span>`;
 }
+function formatDate(d) { return new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }); }
 
-function formatDate(d) {
-  return new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+function buildCharts(orders) {
+  const chartDefaults = { responsive: true, maintainAspectRatio: false };
+  const tickStyle = { color: '#666', font: { family: 'IBM Plex Mono', size: 10 } };
+  const gridStyle = { color: '#1e1e1e' };
+
+  // ยอดขายรายวัน 7 วันล่าสุด
+  const days = [], dayRevenue = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }));
+    const rev = orders.filter(o => {
+      const od = new Date(o.createdAt);
+      return od.getDate() === d.getDate() && od.getMonth() === d.getMonth() && od.getFullYear() === d.getFullYear();
+    }).reduce((s, o) => s + (o.totalPrice || 0), 0);
+    dayRevenue.push(rev);
+  }
+  if (chartDaily) chartDaily.destroy();
+  chartDaily = new Chart(document.getElementById('chart-daily'), {
+    type: 'bar',
+    data: { labels: days, datasets: [{ label: 'ยอดขาย (฿)', data: dayRevenue, backgroundColor: 'rgba(232,255,0,0.7)', borderColor: '#e8ff00', borderWidth: 1, borderRadius: 4 }] },
+    options: { ...chartDefaults, plugins: { legend: { display: false } }, scales: { x: { ticks: tickStyle, grid: gridStyle }, y: { ticks: tickStyle, grid: gridStyle } } }
+  });
+
+  // สถานะออเดอร์
+  const statusCount = {};
+  orders.forEach(o => { statusCount[o.status] = (statusCount[o.status] || 0) + 1; });
+  const statusLabels = { pending: 'รอดำเนินการ', confirmed: 'ยืนยัน', shipped: 'จัดส่ง', delivered: 'ส่งแล้ว', cancelled: 'ยกเลิก', awaiting_payment: 'รอชำระ' };
+  if (chartStatus) chartStatus.destroy();
+  chartStatus = new Chart(document.getElementById('chart-status'), {
+    type: 'doughnut',
+    data: { labels: Object.keys(statusCount).map(k => statusLabels[k] || k), datasets: [{ data: Object.values(statusCount), backgroundColor: ['#ffb800','#00ff87','#e8ff00','#00bfff','#ff3c00','#ff6b6b'], borderWidth: 0 }] },
+    options: { ...chartDefaults, plugins: { legend: { position: 'bottom', labels: { color: '#666', font: { family: 'IBM Plex Mono', size: 10 }, padding: 8 } } } }
+  });
+
+  // วิธีชำระเงิน
+  const payCount = {};
+  orders.forEach(o => { const p = o.paymentMethod || 'other'; payCount[p] = (payCount[p] || 0) + 1; });
+  if (chartPayment) chartPayment.destroy();
+  chartPayment = new Chart(document.getElementById('chart-payment'), {
+    type: 'pie',
+    data: { labels: Object.keys(payCount), datasets: [{ data: Object.values(payCount), backgroundColor: ['#e8ff00','#00ff87','#ffb800','#ff3c00','#00bfff'], borderWidth: 0 }] },
+    options: { ...chartDefaults, plugins: { legend: { position: 'bottom', labels: { color: '#666', font: { family: 'IBM Plex Mono', size: 10 }, padding: 8 } } } }
+  });
 }
 
 async function loadDashboard() {
@@ -377,9 +336,10 @@ async function loadDashboard() {
     document.getElementById('stat-users').textContent = Array.isArray(users) ? users.length : '—';
     document.getElementById('stat-products').textContent = Array.isArray(products) ? products.length : '—';
     document.getElementById('stat-orders').textContent = Array.isArray(orders) ? orders.length : '—';
-    const pending = Array.isArray(orders) ? orders.filter(o => o.status === 'pending' || o.status === 'awaiting_payment').length : 0;
-    document.getElementById('stat-pending').textContent = pending;
+    const revenue = Array.isArray(orders) ? orders.reduce((s, o) => s + (o.totalPrice || 0), 0) : 0;
+    document.getElementById('stat-revenue').textContent = revenue.toLocaleString();
     if (Array.isArray(orders)) {
+      buildCharts(orders);
       const recent = orders.slice(0, 8);
       document.getElementById('recent-orders').innerHTML = recent.length ? recent.map(o => `
         <tr>
@@ -396,8 +356,7 @@ async function loadDashboard() {
 async function loadUsers() {
   document.getElementById('users-table').innerHTML = '<tr><td colspan="5" class="loading">กำลังโหลด...</td></tr>';
   try {
-    const res = await fetch(`${API}/auth/users`, { headers: headers() });
-    const users = await res.json();
+    const users = await fetch(`${API}/auth/users`, { headers: headers() }).then(r => r.json());
     document.getElementById('users-table').innerHTML = Array.isArray(users) && users.length ? users.map(u => `
       <tr>
         <td>${u.name}</td>
@@ -417,7 +376,6 @@ async function changeRole(id, role) {
   await fetch(`${API}/auth/users/${id}/role`, { method: 'PUT', headers: headers(), body: JSON.stringify({ role }) });
   loadUsers();
 }
-
 async function deleteUser(id) {
   if (!confirm('ลบสมาชิกนี้?')) return;
   await fetch(`${API}/auth/users/${id}`, { method: 'DELETE', headers: headers() });
@@ -427,8 +385,7 @@ async function deleteUser(id) {
 async function loadProducts() {
   document.getElementById('products-table').innerHTML = '<tr><td colspan="5" class="loading">กำลังโหลด...</td></tr>';
   try {
-    const res = await fetch(`${API}/products`);
-    const products = await res.json();
+    const products = await fetch(`${API}/products`).then(r => r.json());
     document.getElementById('products-table').innerHTML = Array.isArray(products) && products.length ? products.map(p => `
       <tr>
         <td>${p.name}</td>
@@ -441,13 +398,7 @@ async function loadProducts() {
 }
 
 async function addProduct() {
-  const body = {
-    name: document.getElementById('p-name').value,
-    price: Number(document.getElementById('p-price').value),
-    category: document.getElementById('p-category').value,
-    imageUrl: document.getElementById('p-image').value,
-    description: document.getElementById('p-desc').value,
-  };
+  const body = { name: document.getElementById('p-name').value, price: Number(document.getElementById('p-price').value), category: document.getElementById('p-category').value, imageUrl: document.getElementById('p-image').value, description: document.getElementById('p-desc').value };
   if (!body.name || !body.price) { showMsg('p-error', '❌ กรุณากรอกชื่อและราคา'); return; }
   try {
     const res = await fetch(`${API}/products`, { method: 'POST', headers: headers(), body: JSON.stringify(body) });
@@ -455,7 +406,6 @@ async function addProduct() {
     else { const d = await res.json(); showMsg('p-error', '❌ ' + d.message); }
   } catch { showMsg('p-error', '❌ เกิดข้อผิดพลาด'); }
 }
-
 async function deleteProduct(id) {
   if (!confirm('ลบสินค้านี้?')) return;
   await fetch(`${API}/products/${id}`, { method: 'DELETE', headers: headers() });
@@ -465,8 +415,7 @@ async function deleteProduct(id) {
 async function loadOrders() {
   document.getElementById('orders-table').innerHTML = '<tr><td colspan="6" class="loading">กำลังโหลด...</td></tr>';
   try {
-    const res = await fetch(`${API}/orders`, { headers: headers() });
-    const orders = await res.json();
+    const orders = await fetch(`${API}/orders`, { headers: headers() }).then(r => r.json());
     document.getElementById('orders-table').innerHTML = Array.isArray(orders) && orders.length ? orders.map(o => `
       <tr>
         <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">${o._id.slice(-10)}</td>
@@ -477,10 +426,8 @@ async function loadOrders() {
         <td>
           <select onchange="updateOrderStatus('${o._id}', this.value)" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px 8px;font-size:11px;font-family:'IBM Plex Mono',monospace">
             <option value="">เปลี่ยนสถานะ</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="shipped">Shipped</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="pending">Pending</option><option value="confirmed">Confirmed</option>
+            <option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option>
           </select>
         </td>
       </tr>`).join('') : '<tr><td colspan="6" class="empty">ยังไม่มีออเดอร์</td></tr>';
@@ -496,8 +443,7 @@ async function updateOrderStatus(id, status) {
 async function loadReceipts() {
   document.getElementById('receipts-table').innerHTML = '<tr><td colspan="6" class="loading">กำลังโหลด...</td></tr>';
   try {
-    const res = await fetch(`${API}/receipts/admin/all`, { headers: headers() });
-    const data = await res.json();
+    const data = await fetch(`${API}/receipts/admin/all`, { headers: headers() }).then(r => r.json());
     const receipts = data.receipts || data;
     document.getElementById('receipts-table').innerHTML = Array.isArray(receipts) && receipts.length ? receipts.map(r => `
       <tr>
@@ -506,37 +452,17 @@ async function loadReceipts() {
         <td style="font-family:'IBM Plex Mono',monospace">฿${(r.total||0).toLocaleString()}</td>
         <td><span class="badge badge-default">${r.paymentMethod || '—'}</span></td>
         <td>${paymentBadge(r.paymentStatus)}</td>
-        <td>
-          ${r.paymentStatus === 'pending' ? `
-            <button class="btn-sm" onclick="confirmReceipt('${r._id}')" style="border-color:var(--success);color:var(--success)">✓ ยืนยัน</button>
-            <button class="btn-danger-sm" onclick="rejectReceipt('${r._id}')" style="margin-left:6px">✗ ปฏิเสธ</button>
-          ` : '—'}
-        </td>
+        <td>${r.paymentStatus === 'pending' ? `
+          <button class="btn-sm" onclick="confirmReceipt('${r._id}')" style="border-color:var(--success);color:var(--success)">✓ ยืนยัน</button>
+          <button class="btn-danger-sm" onclick="rejectReceipt('${r._id}')" style="margin-left:6px">✗ ปฏิเสธ</button>` : '—'}</td>
       </tr>`).join('') : '<tr><td colspan="6" class="empty">ไม่มีใบเสร็จ</td></tr>';
   } catch { document.getElementById('receipts-table').innerHTML = '<tr><td colspan="6" class="empty">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
 }
 
-async function confirmReceipt(id) {
-  await fetch(`${API}/receipts/${id}/confirm`, { method: 'PATCH', headers: headers() });
-  loadReceipts();
-}
-
-async function rejectReceipt(id) {
-  if (!confirm('ปฏิเสธการชำระเงินนี้?')) return;
-  await fetch(`${API}/receipts/${id}/reject`, { method: 'PATCH', headers: headers() });
-  loadReceipts();
-}
-
-function showMsg(id, msg) {
-  const el = document.getElementById(id);
-  el.textContent = msg; el.style.display = 'block';
-  setTimeout(() => el.style.display = 'none', 3000);
-}
-
-// Enter key login
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
-});
+async function confirmReceipt(id) { await fetch(`${API}/receipts/${id}/confirm`, { method: 'PATCH', headers: headers() }); loadReceipts(); }
+async function rejectReceipt(id) { if (!confirm('ปฏิเสธ?')) return; await fetch(`${API}/receipts/${id}/reject`, { method: 'PATCH', headers: headers() }); loadReceipts(); }
+function showMsg(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 3000); }
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin(); });
 </script>
 </body>
 </html>
