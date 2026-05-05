@@ -168,6 +168,7 @@
         <div class="nav-item" onclick="showPage('products', this)"><span class="nav-icon">🧢</span> สินค้า</div>
         <div class="nav-item" onclick="showPage('orders', this)"><span class="nav-icon">📦</span> ออเดอร์</div>
         <div class="nav-item" onclick="showPage('receipts', this)"><span class="nav-icon">🧾</span> ใบเสร็จ</div>
+        <div class="nav-item" onclick="showPage('coupons', this)"><span class="nav-icon">🎟️</span> โค้ดส่วนลด</div>
       </nav>
       <div class="sidebar-footer">
         <div class="admin-badge"><strong id="admin-name">Admin</strong>Administrator</div>
@@ -260,6 +261,35 @@
           <tbody id="receipts-table"><tr><td colspan="6" class="loading">กำลังโหลด...</td></tr></tbody></table>
         </div>
       </div>
+
+      <div class="page" id="page-coupons">
+        <div class="page-title">โค้ดส่วนลด</div>
+        <div class="page-sub">สร้างและจัดการโค้ดส่วนลด</div>
+        <div class="form-card">
+          <div class="form-title">สร้างโค้ดใหม่</div>
+          <div class="form-grid">
+            <div class="form-field"><label>โค้ด</label><input type="text" id="c-code" placeholder="STUSSY10" style="text-transform:uppercase"></div>
+            <div class="form-field"><label>ประเภท</label>
+              <select id="c-type">
+                <option value="percent">เปอร์เซ็นต์ (%)</option>
+                <option value="fixed">จำนวนเงิน (฿)</option>
+              </select>
+            </div>
+            <div class="form-field"><label>ส่วนลด</label><input type="number" id="c-discount" placeholder="10"></div>
+            <div class="form-field"><label>ยอดขั้นต่ำ (฿)</label><input type="number" id="c-min" placeholder="0"></div>
+            <div class="form-field"><label>จำนวนครั้งที่ใช้ได้</label><input type="number" id="c-maxuses" placeholder="100"></div>
+            <div class="form-field"><label>วันหมดอายุ</label><input type="date" id="c-expires"></div>
+          </div>
+          <button class="btn-primary" onclick="addCoupon()">+ สร้างโค้ด</button>
+          <div class="msg msg-success" id="c-success">✅ สร้างโค้ดสำเร็จ</div>
+          <div class="msg msg-error" id="c-error">❌ เกิดข้อผิดพลาด</div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-header"><div class="table-title">โค้ดทั้งหมด</div><button class="btn-refresh" onclick="loadCoupons()">↻ รีเฟรช</button></div>
+          <table><thead><tr><th>โค้ด</th><th>ส่วนลด</th><th>ยอดขั้นต่ำ</th><th>ใช้แล้ว</th><th>หมดอายุ</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+          <tbody id="coupons-table"><tr><td colspan="7" class="loading">กำลังโหลด...</td></tr></tbody></table>
+        </div>
+      </div>
     </main>
   </div>
 </div>
@@ -310,6 +340,7 @@ function showPage(name, el) {
   if (name === 'products') loadProducts();
   if (name === 'orders') loadOrders();
   if (name === 'receipts') loadReceipts();
+  if (name === 'coupons') loadCoupons();
 }
 
 function statusBadge(s) {
@@ -588,6 +619,56 @@ document.addEventListener('click', e => {
     document.getElementById('notif-panel').classList.remove('open');
   }
 });
+
+
+// ── COUPONS ──────────────────────────────────────────────
+async function loadCoupons() {
+  document.getElementById('coupons-table').innerHTML = '<tr><td colspan="7" class="loading">กำลังโหลด...</td></tr>';
+  try {
+    const coupons = await fetch(`${API}/coupons`, { headers: headers() }).then(r => r.json());
+    document.getElementById('coupons-table').innerHTML = Array.isArray(coupons) && coupons.length ? coupons.map(c => `
+      <tr>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--accent)">${c.code}</td>
+        <td style="font-family:'IBM Plex Mono',monospace">${c.discount}${c.type === 'percent' ? '%' : '฿'}</td>
+        <td style="font-family:'IBM Plex Mono',monospace">฿${(c.minOrder||0).toLocaleString()}</td>
+        <td style="font-family:'IBM Plex Mono',monospace">${c.usedCount}/${c.maxUses}</td>
+        <td style="font-size:12px;color:var(--muted)">${c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('th-TH') : 'ไม่มีวันหมดอายุ'}</td>
+        <td><span class="badge ${c.isActive ? 'badge-success' : 'badge-danger'}">${c.isActive ? 'Active' : 'Inactive'}</span></td>
+        <td>
+          <button class="btn-sm" onclick="toggleCoupon('${c._id}', ${!c.isActive})">${c.isActive ? 'ปิด' : 'เปิด'}</button>
+          <button class="btn-danger-sm" onclick="deleteCoupon('${c._id}')" style="margin-left:6px">ลบ</button>
+        </td>
+      </tr>`).join('') : '<tr><td colspan="7" class="empty">ยังไม่มีโค้ดส่วนลด</td></tr>';
+  } catch { document.getElementById('coupons-table').innerHTML = '<tr><td colspan="7" class="empty">โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
+}
+
+async function addCoupon() {
+  const body = {
+    code: document.getElementById('c-code').value.toUpperCase(),
+    type: document.getElementById('c-type').value,
+    discount: Number(document.getElementById('c-discount').value),
+    minOrder: Number(document.getElementById('c-min').value) || 0,
+    maxUses: Number(document.getElementById('c-maxuses').value) || 100,
+    expiresAt: document.getElementById('c-expires').value || undefined,
+  };
+  if (!body.code || !body.discount) { showMsg('c-error', '❌ กรุณากรอกโค้ดและส่วนลด'); return; }
+  try {
+    const res = await fetch(`${API}/coupons`, { method: 'POST', headers: headers(), body: JSON.stringify(body) });
+    if (res.ok) { showMsg('c-success', '✅ สร้างโค้ดสำเร็จ'); loadCoupons(); }
+    else { const d = await res.json(); showMsg('c-error', '❌ ' + d.message); }
+  } catch { showMsg('c-error', '❌ เกิดข้อผิดพลาด'); }
+}
+
+async function toggleCoupon(id, isActive) {
+  await fetch(`${API}/coupons/${id}`, { method: 'PUT', headers: headers(), body: JSON.stringify({ isActive }) });
+  loadCoupons();
+}
+
+async function deleteCoupon(id) {
+  if (!confirm('ลบโค้ดนี้?')) return;
+  await fetch(`${API}/coupons/${id}`, { method: 'DELETE', headers: headers() });
+  loadCoupons();
+}
 
 // ── EXPORT EXCEL ──────────────────────────────────────────────
 function exportToCSV(filename, rows, headers) {
