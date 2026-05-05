@@ -169,7 +169,7 @@
         <div class="page-title">สมาชิก</div>
         <div class="page-sub">จัดการผู้ใช้งานทั้งหมด</div>
         <div class="table-wrap">
-          <div class="table-header"><div class="table-title">รายชื่อสมาชิก</div><button class="btn-refresh" onclick="loadUsers()">↻ รีเฟรช</button></div>
+          <div class="table-header"><div class="table-title">รายชื่อสมาชิก</div><div style="display:flex;gap:8px"><button class="btn-refresh" onclick="exportUsers()">📤 Export</button><button class="btn-refresh" onclick="loadUsers()">↻ รีเฟรช</button></div></div>
           <table><thead><tr><th>ชื่อ</th><th>Email</th><th>Role</th><th>วันที่สมัคร</th><th>จัดการ</th></tr></thead>
           <tbody id="users-table"><tr><td colspan="5" class="loading">กำลังโหลด...</td></tr></tbody></table>
         </div>
@@ -204,7 +204,7 @@
         <div class="page-title">ออเดอร์</div>
         <div class="page-sub">จัดการคำสั่งซื้อทั้งหมด</div>
         <div class="table-wrap">
-          <div class="table-header"><div class="table-title">รายการออเดอร์</div><button class="btn-refresh" onclick="loadOrders()">↻ รีเฟรช</button></div>
+          <div class="table-header"><div class="table-title">รายการออเดอร์</div><div style="display:flex;gap:8px"><button class="btn-refresh" onclick="exportOrders()">📤 Export</button><button class="btn-refresh" onclick="loadOrders()">↻ รีเฟรช</button></div></div>
           <table><thead><tr><th>Order ID</th><th>ลูกค้า</th><th>ยอดรวม</th><th>วิธีชำระ</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
           <tbody id="orders-table"><tr><td colspan="6" class="loading">กำลังโหลด...</td></tr></tbody></table>
         </div>
@@ -214,7 +214,7 @@
         <div class="page-title">ใบเสร็จ</div>
         <div class="page-sub">ยืนยันและจัดการการชำระเงิน</div>
         <div class="table-wrap">
-          <div class="table-header"><div class="table-title">รอยืนยัน</div><button class="btn-refresh" onclick="loadReceipts()">↻ รีเฟรช</button></div>
+          <div class="table-header"><div class="table-title">รอยืนยัน</div><div style="display:flex;gap:8px"><button class="btn-refresh" onclick="exportReceipts()">📤 Export</button><button class="btn-refresh" onclick="loadReceipts()">↻ รีเฟรช</button></div></div>
           <table><thead><tr><th>เลขใบเสร็จ</th><th>ลูกค้า</th><th>ยอด</th><th>วิธีชำระ</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
           <tbody id="receipts-table"><tr><td colspan="6" class="loading">กำลังโหลด...</td></tr></tbody></table>
         </div>
@@ -463,6 +463,44 @@ async function confirmReceipt(id) { await fetch(`${API}/receipts/${id}/confirm`,
 async function rejectReceipt(id) { if (!confirm('ปฏิเสธ?')) return; await fetch(`${API}/receipts/${id}/reject`, { method: 'PATCH', headers: headers() }); loadReceipts(); }
 function showMsg(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 3000); }
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin(); });
+
+// ── EXPORT EXCEL ──────────────────────────────────────────────
+function exportToCSV(filename, rows, headers) {
+  const BOM = '\uFEFF';
+  const csvContent = BOM + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(','))].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function exportUsers() {
+  try {
+    const users = await fetch(`${API}/auth/users`, { headers: headers() }).then(r => r.json());
+    if (!Array.isArray(users)) return alert('โหลดข้อมูลไม่สำเร็จ');
+    const rows = users.map(u => [u.name, u.email, u.role, new Date(u.createdAt).toLocaleDateString('th-TH')]);
+    exportToCSV('สมาชิก_stussy.csv', rows, ['ชื่อ', 'Email', 'Role', 'วันที่สมัคร']);
+  } catch { alert('เกิดข้อผิดพลาด'); }
+}
+
+async function exportOrders() {
+  try {
+    const orders = await fetch(`${API}/orders`, { headers: headers() }).then(r => r.json());
+    if (!Array.isArray(orders)) return alert('โหลดข้อมูลไม่สำเร็จ');
+    const rows = orders.map(o => [o._id.slice(-10), o.user?.name || '—', o.user?.email || '—', o.totalPrice || 0, o.paymentMethod || '—', o.status, new Date(o.createdAt).toLocaleDateString('th-TH')]);
+    exportToCSV('ออเดอร์_stussy.csv', rows, ['Order ID', 'ชื่อลูกค้า', 'Email', 'ยอดรวม', 'วิธีชำระ', 'สถานะ', 'วันที่']);
+  } catch { alert('เกิดข้อผิดพลาด'); }
+}
+
+async function exportReceipts() {
+  try {
+    const data = await fetch(`${API}/receipts/admin/all`, { headers: headers() }).then(r => r.json());
+    const receipts = data.receipts || data;
+    if (!Array.isArray(receipts)) return alert('โหลดข้อมูลไม่สำเร็จ');
+    const rows = receipts.map(r => [r.receiptNumber || r._id.slice(-8), r.user?.name || '—', r.user?.email || '—', r.total || 0, r.paymentMethod || '—', r.paymentStatus, new Date(r.createdAt).toLocaleDateString('th-TH')]);
+    exportToCSV('ใบเสร็จ_stussy.csv', rows, ['เลขใบเสร็จ', 'ชื่อลูกค้า', 'Email', 'ยอด', 'วิธีชำระ', 'สถานะ', 'วันที่']);
+  } catch { alert('เกิดข้อผิดพลาด'); }
+}
 </script>
 </body>
 </html>
