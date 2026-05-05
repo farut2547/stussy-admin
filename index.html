@@ -287,6 +287,8 @@ const API = 'https://stussy-backend.onrender.com/api';
 let token = localStorage.getItem('admin_token');
 let adminUser = null;
 
+const headers = () => ({ 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' });
+
 // ถ้ามี token อยู่แล้ว
 if (token) initApp();
 
@@ -342,8 +344,6 @@ function showPage(name) {
   if (name === 'orders') loadOrders();
   if (name === 'receipts') loadReceipts();
 }
-
-const headers = () => ({ 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' });
 
 function statusBadge(s) {
   const map = {
